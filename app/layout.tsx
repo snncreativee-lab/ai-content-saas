@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "AINA AI Content",
+  title: "aina ai content",
   description: "AINA Content Generator",
 };
 

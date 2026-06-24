@@ -120,7 +120,7 @@ export default function DashboardPage() {
     <main className="min-h-screen p-10">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-4xl font-bold">Dashboard AI Content Booster</h1>
+          <h1 className="text-4xl font-bold">Aina AI Content Booster</h1>
 
           {profile && (
             <p className="mt-2 text-gray-600">
@@ -161,10 +161,12 @@ export default function DashboardPage() {
           <option>Facebook</option>
           <option>Instagram</option>
           <option>WhatsApp</option>
+          <option>threads</option>
+          <option>Telegram</option>
         </select>
 
         <input
-          placeholder="Contoh: Jersi Muslimah Badminton"
+          placeholder="Contoh: Jersi Muslimah"
           className="border p-3 rounded-lg w-full"
           value={product}
           onChange={(e) => setProduct(e.target.value)}
@@ -174,7 +176,7 @@ export default function DashboardPage() {
           onClick={generateContent}
           className="bg-purple-600 text-white px-6 py-3 rounded-lg mt-4"
         >
-          {loading ? "AI sedang generate..." : "Generate 3 Content"}
+          {loading ? "AINA sedang generate..." : "Generate 3 Content"}
         </button>
 
         {result && (
