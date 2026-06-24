@@ -1,79 +1,68 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: Request) {
   try {
-    const { product, platform, category } = await req.json();
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json(
+        { error: "GEMINI_API_KEY belum diisi dalam .env.local" },
+        { status: 500 }
+      );
+    }
 
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-    });
+    const body = await req.json();
+    const { productName, description, targetCustomer, benefits } = body;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `
-Kau ialah pakar marketing untuk seller online Malaysia.
+    const prompt = `
+Anda ialah AI marketing assistant untuk usahawan Malaysia.
 
-Produk: ${product}
-Platform: ${platform}
-Kategori Perniagaan: ${category}
+Maklumat bisnes:
+Nama Produk/Servis: ${productName}
+Penerangan Produk/Servis: ${description}
+Target Pelanggan: ${targetCustomer || "Tidak dinyatakan"}
+Kelebihan Utama: ${benefits || "Tidak dinyatakan"}
 
 Tugasan:
-Beri 3 idea content jualan untuk hari ini.
+Kenal pasti sendiri kategori perniagaan produk/servis ini.
+Hasilkan 3 idea kandungan pemasaran harian.
 
-Content 1:
-- Soft Sell
+Setiap konten mesti ada:
+1. Tajuk konten
+2. Hook permulaan
+3. Caption pendek gaya Malaysia
+4. Call-to-action
+5. Cadangan hashtag
 
-Content 2:
-- Trust / Story
+Gaya bahasa:
+Bahasa Melayu santai, sesuai untuk TikTok, Instagram dan Facebook.
+Ayat menjual tetapi tidak terlalu hard sell.
+`;
 
-Content 3:
-- Hard Sell CTA
-
-Untuk setiap content berikan:
-- Hook
-- Idea Video/Post
-- Caption
-- CTA
-
-Sesuaikan gaya penulisan mengikut kategori perniagaan dan platform.
-
-Jika kategori Jersi Muslimah:
-Fokus pada custom design, sopan, aurat-friendly, team, sekolah, event, sukan dan confidence wanita.
-
-Jika kategori Perfume:
-Fokus pada bau, personaliti, hadiah, keyakinan dan daily use.
-
-Jika kategori Makanan:
-Fokus pada rasa, craving, repeat order, delivery dan waktu lapar.
-
-Jika kategori Ejen Takaful:
-Fokus pada kesedaran perlindungan, keluarga dan masa depan.
-
-Jika kategori Hartanah:
-Fokus pada rumah pertama, pelaburan, lokasi dan kemampuan bulanan.
-
-Jika platform TikTok:
-Fokus hook kuat 3 saat pertama, idea video pendek 15-30 saat dan CTA ringkas.
-
-Jika platform Facebook:
-Fokus storytelling, caption panjang dan engagement.
-
-Jika platform Instagram:
-Fokus visual, carousel, caption aesthetic dan CTA DM.
-
-Jika platform WhatsApp:
-Fokus mesej broadcast, soft closing dan ayat follow up.
-
-Gunakan Bahasa Melayu Malaysia yang santai, jelas, meyakinkan dan sesuai untuk seller online.
-`,
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
     });
 
-    return Response.json({
-      result: response.text,
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const content = response.text();
+
+    return NextResponse.json({
+      content: content || "AI tidak mengembalikan jawapan.",
     });
   } catch (error: any) {
-    return Response.json({
-      error: error.message || "Unknown error",
-    });
+    console.error("GEMINI_GENERATE_ERROR:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error?.message ||
+          "Gagal generate content dengan Gemini. Semak terminal.",
+      },
+      { status: 500 }
+    );
   }
 }
